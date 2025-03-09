@@ -17,7 +17,7 @@ exports.register = async(req, res) => {
             return res.status(400).json({message:'User already exists'});
         }
         //check is role correct
-        if (role !== 'trainer' && role !== 'trainee') {
+        if (role !== 'trainer' && role !== 'client') {
             return res.status(400).json({ message: 'Invalid role' });
           }
 
