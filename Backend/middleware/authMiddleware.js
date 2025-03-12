@@ -7,12 +7,12 @@ const protect = async (req, res, next) => {
         req.headers.authorization.startsWith('Bearer')
     ) {
         try {
-            token = req.headers.authorization.split('')[1];
+            token = req.headers.authorization.split(' ')[1]; 
 
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             
             const result = await pool.query(
-                'SELECT id, email, first_name, last_name, role FROM users WHERE id=$1',
+                'SELECT id, email, user_name, role FROM users WHERE id=$1',
                 [decoded.id]
             );
 

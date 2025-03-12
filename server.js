@@ -18,11 +18,6 @@ app.use(express.urlencoded({extended:false}));
 app.use(methodOverride("_method"));
 app.use(morgan("dev"));
 
-//routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/appointments', require('./routes/appointmentRoutes'));
-app.use('/api/workouts', require('./routes/workoutRoutes'));
 
 
 app.listen(3000, () => {
