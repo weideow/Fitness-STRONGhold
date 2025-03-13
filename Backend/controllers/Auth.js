@@ -53,14 +53,13 @@ const registerUser = async (req, res) => {
   
       const user = result.rows[0];
   
-      if (user && (await bcrypt.compare(password, user.password))) {
+      if (user && (await bcrypt.compare(password, user.hashed_password))) {
         res.json({
-          id: user.id,
-          email: user.email,
-          firstName: user.first_name,
-          lastName: user.last_name,
+          user_id: user.user_id,
+          user_name: user.user_name,
+          user_email: user.user_email,
           role: user.role,
-          token: generateToken(user.id, user.role),
+          token: generateToken(user.user_id, user.role),
         });
       } else {
         res.status(401).json({ message: 'Invalid email or password' });
