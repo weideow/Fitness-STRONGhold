@@ -35,6 +35,7 @@ const ClientBooking = () => {
       );
       alert('Booking confirmed!');
     } catch (err) {
+        console.log(err)
       setError('Error making booking');
     }
   };

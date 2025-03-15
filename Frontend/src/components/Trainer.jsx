@@ -23,7 +23,8 @@ const TrainerAvailability = () => {
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
       alert('Availability added successfully');
-    } catch (error) {
+    } catch (err) {
+        console.log(err)
       setError('Error adding availability');
     }
   };

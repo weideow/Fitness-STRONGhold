@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { useHistory } from 'react-router';
+import { useNavigate } from 'react-router';  
 import AuthContext from '../contexts/authContexts';
 import axios from 'axios';
 
@@ -8,15 +8,16 @@ const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
-  const history = useHistory();
+  const navigate = useNavigate(); 
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       const { data } = await axios.post('/api/auth/login', { email, password });
-      login(data);
-      history.push('/dashboard');
-    } catch (error) {
+      login(data);  
+      navigate('/dashboard');  
+    } catch (err) {
+      console.log(err);
       setError('Invalid credentials');
     }
   };
