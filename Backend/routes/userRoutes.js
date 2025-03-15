@@ -47,7 +47,7 @@ router.get('/available-schedule', protect, async(req,res) => {
     
 });
 
-router.post('/book', protect, async(req,res) => {
+router.post('/booking', protect, async(req,res) => {
     if (req.user.role !== 'client') {
         return res.status(403).json({message:'Unauthorized'});
     }
@@ -89,3 +89,10 @@ router.post('/book', protect, async(req,res) => {
 });
 
    
+// GET/availability
+// DELETE/availability
+// GET/bookings
+// DELETE/bookings
+// GET/workout
+// DELETE/workout
+
