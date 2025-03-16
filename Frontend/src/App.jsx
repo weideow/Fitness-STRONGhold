@@ -5,7 +5,10 @@ import TrainerDashboard from './components/TrainerDashboard';
 import LoginForm from './components/Login';
 import Navbar from './components/Navbar';
 import { AuthProvider } from './contexts/authContexts';
-import RegisterForm from './components/Register';
+import Register from './components/Register';
+import WorkoutPage from './components/Workouts';
+import ProtectedRoute from './components/Protected';
+
 
 function App() {
   return (
@@ -14,9 +17,10 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/login" element={<LoginForm />} />
-          <Route path="/dashboard/client" element={<ClientDashboard />} />
-          <Route path="/dashboard/trainer" element={<TrainerDashboard />} />
-          <Route path="/register" element={<RegisterForm />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard/client" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
+          <Route path="/dashboard/trainer" element={<ProtectedRoute><TrainerDashboard /></ProtectedRoute>} />
+          <Route path="/workouts" element={<WorkoutPage/>}></Route>
         </Routes>
       </Router>
     </AuthProvider>

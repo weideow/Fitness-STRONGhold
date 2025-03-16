@@ -1,10 +1,10 @@
 const express = require('express');
 const protect = require('../middleware/authMiddleware');
-const {pool} = require('../config/database');
+const { pool } = require('../config/database');
 
 const router = express.Router();
 
-//trainer to check all posted availability
+// trainer to check all posted availability
 router.get('/availability', protect, async (req, res) => {
     if (req.user.role !== 'trainer' && req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Unauthorized' });
@@ -15,7 +15,7 @@ router.get('/availability', protect, async (req, res) => {
             `SELECT schedule_id, trainer_id, lesson_name, available_date, available_time
             FROM schedules
             WHERE trainer_id = $1`,
-            [req.user.user_id] // Only get the trainer's availability
+            [req.user.user_id]
         );
         res.json(result.rows);
     } catch (error) {
@@ -24,48 +24,45 @@ router.get('/availability', protect, async (req, res) => {
     }
 });
 
-
-//trainer route to post their availability
-router.post('/availability', protect, async(req,res)=> {
+// trainer route to post their availability
+router.post('/availability', protect, async (req, res) => {
     if (req.user.role !== 'trainer') {
-        return res.status(403).json({message:'Unauthorized'});
+        return res.status(403).json({ message: 'Unauthorized' });
     }
-    const {lesson_name, available_date, available_time} = req.body;
+    const { lesson_name, available_date, available_time } = req.body;
 
     try {
         const result = await pool.query(
-            `INSERT INTO schedules(trainer_id, lesson_name, available_date, available_time )
+            `INSERT INTO schedules (trainer_id, lesson_name, available_date, available_time)
             VALUES ($1, $2, $3, $4)
             RETURNING schedule_id, trainer_id, lesson_name, available_date, available_time`,
             [req.user.user_id, lesson_name, available_date, available_time]
         );
         res.status(201).json(result.rows[0]);
     } catch (error) {
-    res.status(500).json({message: 'Server error'});
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
-//client route to check available schedules
-router.get('/available-schedule', protect, async(req,res) => {
+// client route to check available schedules 
+router.get('/available-schedule', protect, async (req, res) => {
     if (req.user.role !== 'client') {
-        return res.status(403).json({message:'Unauthorized'}) ;
-    } 
+        return res.status(403).json({ message: 'Unauthorized' });
+    }
     
     try {
-
-        const schedule = await pool.query(
+        const schedules = await pool.query(
             `SELECT s.schedule_id, s.lesson_name, s.available_date, s.available_time, u.user_name AS trainer_name
             FROM schedules s
             JOIN users u ON s.trainer_id = u.user_id
-            WHERE s.availability_date >= CURRENT_DATE`
+            WHERE s.available_date >= CURRENT_DATE`
         );
 
         res.json(schedules.rows);
     } catch (error) {
         console.error(error);
-        res.status(500).json({message: 'Server error'});
+        res.status(500).json({ message: 'Server error' });
     }
-    
 });
 
 // client to make bookings if available
