@@ -11,7 +11,7 @@ const ClientBooking = () => {
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
-        const response = await axios.get('/api/schedules/available');
+        const response = await axios.get('/schedules/available');
         setSchedules(response.data);
       } catch (err) {
         setError('Error fetching schedules');
@@ -29,7 +29,7 @@ const ClientBooking = () => {
 
     try {
       const response = await axios.post(
-        '/api/bookings',
+        '/bookings',
         { schedule_id: selectedSchedule },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );

@@ -10,7 +10,7 @@ const WorkoutPage = () => {
   useEffect(() => {
     const fetchWorkouts = async () => {
       try {
-        const response = await axios.get('/api/workouts');
+        const response = await axios.get('/workouts');
         setWorkouts(response.data);
       } catch (error) {
         console.error(error);
@@ -21,7 +21,7 @@ const WorkoutPage = () => {
 
   const handleAddWorkout = async () => {
     try {
-      const response = await axios.post('/api/workouts/new', {
+      const response = await axios.post('/workouts/new', {
         workout_name: workoutName,
         calories_burnt: caloriesBurnt,
         description
