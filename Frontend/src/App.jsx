@@ -9,10 +9,11 @@ import Register from './components/Register';
 import WorkoutPage from './components/Workouts';
 import ProtectedRoute from './components/Protected';
 
+
 function App() {
   return (
     <AuthProvider>
-      <Router>
+    
         <Navbar />
         <Routes>
           <Route path="/login" element={<LoginForm />} />
@@ -22,7 +23,7 @@ function App() {
           <Route path="/workouts" element={<ProtectedRoute><WorkoutPage /></ProtectedRoute>} />
           <Route path="/" element={<LoginForm />} />
         </Routes>
-      </Router>
+     
     </AuthProvider>
   );
 }

@@ -186,6 +186,81 @@ router.delete('/bookings/:id', protect, async (req, res) => {
     }
 });
 
+// Client to update their booking 
+router.put('/bookings/:id', protect, async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (req.user.role !== 'client') {
+        return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    if (!status || !['pending', 'confirmed', 'canceled'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    try {
+        // Check if the booking belongs to the client
+        const booking = await pool.query(
+            'SELECT * FROM bookings WHERE booking_id = $1 AND client_id = $2',
+            [id, req.user.user_id]
+        );
+
+        if (booking.rows.length === 0) {
+            return res.status(404).json({ message: 'Booking not found or not authorized' });
+        }
+
+       
+        const result = await pool.query(
+            'UPDATE bookings SET status = $1 WHERE booking_id = $2 RETURNING *',
+            [status, id]
+        );
+
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Trainer to update their availability
+router.put('/availability/:id', protect, async (req, res) => {
+    const { id } = req.params;
+    const { lesson_name, available_date, available_time } = req.body;
+
+    if (req.user.role !== 'trainer') {
+        return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    try {
+        // Check if the schedule belongs to the trainer
+        const schedule = await pool.query(
+            'SELECT * FROM schedules WHERE schedule_id = $1 AND trainer_id = $2',
+            [id, req.user.user_id]
+        );
+
+        if (schedule.rows.length === 0) {
+            return res.status(404).json({ message: 'Schedule not found or not authorized' });
+        }
+
+
+        const result = await pool.query(
+            `UPDATE schedules 
+             SET lesson_name = COALESCE($1, lesson_name),
+                 available_date = COALESCE($2, available_date),
+                 available_time = COALESCE($3, available_time)
+             WHERE schedule_id = $4
+             RETURNING *`,
+            [lesson_name, available_date, available_time, id]
+        );
+
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 module.exports = router;
 
    
