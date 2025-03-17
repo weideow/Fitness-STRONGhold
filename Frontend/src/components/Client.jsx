@@ -7,11 +7,15 @@ const ClientBooking = () => {
   const [schedules, setSchedules] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [error, setError] = useState('');
+  const baseUrl = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
-        const response = await axios.get('/schedules/available');
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${baseUrl}/user/available-schedule`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setSchedules(response.data);
       } catch (err) {
         setError('Error fetching schedules');
@@ -19,7 +23,7 @@ const ClientBooking = () => {
     };
 
     fetchSchedules();
-  }, []);
+  }, [baseUrl]);
 
   const handleBooking = async () => {
     if (!selectedSchedule) {
@@ -28,14 +32,21 @@ const ClientBooking = () => {
     }
 
     try {
-      const response = await axios.post(
-        '/bookings',
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${baseUrl}/user/bookings`,
         { schedule_id: selectedSchedule },
-        { headers: { Authorization: `Bearer ${user.token}` } }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       alert('Booking confirmed!');
+      // Refresh schedules
+      const response = await axios.get(`${baseUrl}/user/available-schedule`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSchedules(response.data);
+      setSelectedSchedule(null);
     } catch (err) {
-        console.log(err)
+      console.log(err);
       setError('Error making booking');
     }
   };

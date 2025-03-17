@@ -12,13 +12,18 @@ const Trainer = () => {
     available_date: '',
     available_time: ''
   });
+
   const { user } = useContext(AuthContext);
+  const baseUrl = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     const fetchTrainerData = async () => {
       try {
-        const availabilitiesRes = await axios.get('/schedules/trainer');
-        const bookingsRes = await axios.get('/bookings/trainer');
+        const token = localStorage.getItem('token');
+        const headers = { Authorization: `Bearer ${token}` };
+        
+        const availabilitiesRes = await axios.get(`${baseUrl}/user/availability`, { headers });
+        const bookingsRes = await axios.get(`${baseUrl}/user/bookings`, { headers });
         
         setAvailabilities(availabilitiesRes.data);
         setBookings(bookingsRes.data);
@@ -31,7 +36,7 @@ const Trainer = () => {
     };
 
     fetchTrainerData();
-  }, []);
+  }, [baseUrl]);
 
   const handleChange = (e) => {
     setFormData({
@@ -44,7 +49,11 @@ const Trainer = () => {
     e.preventDefault();
     
     try {
-      await axios.post('/api/schedules', formData);
+      const token = localStorage.getItem('token');
+      const payload = {...formData, trainer_id: user.user_id};
+      await axios.post(`${baseUrl}/user/schedules`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       // Reset form
       setFormData({
@@ -54,7 +63,9 @@ const Trainer = () => {
       });
       
       // Refresh availabilities
-      const res = await axios.get('/api/schedules/trainer');
+      const res = await axios.get(`${baseUrl}/user/schedules`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setAvailabilities(res.data);
     } catch (err) {
       setError('Failed to add availability');
@@ -64,10 +75,15 @@ const Trainer = () => {
 
   const deleteAvailability = async (scheduleId) => {
     try {
-      await axios.delete(`/api/schedules/${scheduleId}`);
+      const token = localStorage.getItem('token');
+      await axios.delete(`${baseUrl}/user/schedules${scheduleId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       // Refresh availabilities
-      const res = await axios.get('/api/schedules/trainer');
+      const res = await axios.get(`${baseUrl}/user/schedules`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setAvailabilities(res.data);
     } catch (err) {
       setError('Failed to delete availability');
@@ -77,10 +93,16 @@ const Trainer = () => {
 
   const updateBookingStatus = async (bookingId, status) => {
     try {
-      await axios.put(`/api/bookings/${bookingId}`, { status });
+      const token = localStorage.getItem('token');
+      await axios.put(`${baseUrl}/user/bookings/${bookingId}`, 
+        { status },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       
       // Refresh bookings
-      const res = await axios.get('/api/bookings/trainer');
+      const res = await axios.get(`${baseUrl}/user/bookings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setBookings(res.data);
     } catch (err) {
       setError(`Failed to ${status} booking`);

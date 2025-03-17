@@ -24,9 +24,33 @@ router.get('/availability', protect, async (req, res) => {
     }
 });
 
+//for trainers to see all bookings clients made
+router.get('/bookings', protect, async (req, res) => {
+    if (req.user.role !== 'trainer' && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    try {
+        const result = await pool.query(
+            `SELECT b.booking_id, b.client_id, b.schedule_id, b.status, 
+                    s.lesson_name, s.available_date, s.available_time,
+                    u.user_name AS client_name
+             FROM bookings b
+             JOIN schedules s ON b.schedule_id = s.schedule_id
+             JOIN users u ON b.client_id = u.user_id
+             WHERE s.trainer_id = $1`,
+            [req.user.user_id]
+        );
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // trainer route to post their availability
 router.post('/availability', protect, async (req, res) => {
-    if (req.user.role !== 'trainer') {
+    if (req.user.role !== 'trainer' && req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Unauthorized' });
     }
     const { lesson_name, available_date, available_time } = req.body;
@@ -46,7 +70,7 @@ router.post('/availability', protect, async (req, res) => {
 
 // client route to check available schedules 
 router.get('/available-schedule', protect, async (req, res) => {
-    if (req.user.role !== 'client') {
+    if (req.user.role !== 'client' && req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Unauthorized' });
     }
     
@@ -67,7 +91,7 @@ router.get('/available-schedule', protect, async (req, res) => {
 
 // client to make bookings if available
 router.post('/booking', protect, async(req,res) => {
-    if (req.user.role !== 'client') {
+    if (req.user.role !== 'client' && req.user.role !== 'admin') {
         return res.status(403).json({message:'Unauthorized'});
     }
 
@@ -111,7 +135,7 @@ router.post('/booking', protect, async(req,res) => {
 
 // trainer to delete their availability
 router.delete('/availability/:id', protect, async (req, res) => {
-    if (req.user.role !== 'trainer') {
+    if (req.user.role !== 'trainer' || 'admin') {
         return res.status(403).json({ message: 'Unauthorized' });
     }
 

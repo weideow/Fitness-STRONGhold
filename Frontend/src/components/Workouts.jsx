@@ -6,30 +6,56 @@ const WorkoutPage = () => {
   const [workoutName, setWorkoutName] = useState('');
   const [caloriesBurnt, setCaloriesBurnt] = useState('');
   const [description, setDescription] = useState('');
+  const baseUrl = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     const fetchWorkouts = async () => {
       try {
-        const response = await axios.get('/workouts');
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${baseUrl}/workouts`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setWorkouts(response.data);
       } catch (error) {
         console.error(error);
       }
     };
     fetchWorkouts();
-  }, []);
+  }, [baseUrl]);
 
   const handleAddWorkout = async () => {
     try {
-      const response = await axios.post('/workouts/new', {
-        workout_name: workoutName,
-        calories_burnt: caloriesBurnt,
-        description
-      });
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${baseUrl}/workouts/new`, 
+        {
+          workout_name: workoutName,
+          calories_burnt: caloriesBurnt,
+          description
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
       setWorkouts([...workouts, response.data.workout]);
+      setWorkoutName('');
+      setCaloriesBurnt('');
+      setDescription('');
     } catch (error) {
       console.error(error);
       alert('Failed to add workout');
+    }
+  };
+
+  const handleDelete = async (workoutId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${baseUrl}/workouts/${workoutId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setWorkouts(workouts.filter(workout => workout.workout_id !== workoutId));
+    } catch (error) {
+      console.error(error);
+      alert('Failed to delete workout');
     }
   };
 
