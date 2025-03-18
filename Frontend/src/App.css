@@ -40,3 +40,13 @@
 .read-the-docs {
   color: #888;
 }
+
+.selected-schedule .card {
+  border: 2px solid #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.selected-text {
+  color: #4CAF50;
+  font-weight: bold;
+}

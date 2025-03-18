@@ -1,289 +1,197 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import AuthContext from '../contexts/authContexts';
+import { useNavigate } from 'react-router';
+import {
+  Container,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  Alert,
+  CircularProgress,
+  Paper,
+} from '@mui/material';
 
 const Trainer = () => {
   const [availabilities, setAvailabilities] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
-    lesson_name: '',
-    available_date: '',
-    available_time: ''
-  });
-
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const baseUrl = import.meta.env.VITE_BACKEND_URL;
 
+  // Redirect to login if user is not authenticated
   useEffect(() => {
-    const fetchTrainerData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const headers = { Authorization: `Bearer ${token}` };
-        
-        const availabilitiesRes = await axios.get(`${baseUrl}/user/availability`, { headers });
-        const bookingsRes = await axios.get(`${baseUrl}/user/bookings`, { headers });
-        
-        setAvailabilities(availabilitiesRes.data);
-        setBookings(bookingsRes.data);
-      } catch (err) {
-        setError('Failed to load data');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
-    fetchTrainerData();
-  }, [baseUrl]);
+  // Fetch trainer data (availabilities and bookings)
+  const fetchTrainerData = async () => {
+    if (!user) return;
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
     try {
-      const token = localStorage.getItem('token');
-      const payload = {...formData, trainer_id: user.user_id};
-      await axios.post(`${baseUrl}/user/schedules`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
+      const token = user.token;
+
+      // Fetch availabilities
+      const availabilitiesRes = await axios.get(`${baseUrl}/user/availability`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
-      // Reset form
-      setFormData({
-        lesson_name: '',
-        available_date: '',
-        available_time: ''
+      setAvailabilities(availabilitiesRes.data || []);
+
+      // Fetch bookings
+      const bookingsRes = await axios.get(`${baseUrl}/user/bookings`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
-      // Refresh availabilities
-      const res = await axios.get(`${baseUrl}/user/schedules`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAvailabilities(res.data);
+      setBookings(bookingsRes.data || []);
+      setError('');
     } catch (err) {
-      setError('Failed to add availability');
+      setError('Failed to load data');
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Fetch data on component mount or when user changes
+  useEffect(() => {
+    if (user) {
+      fetchTrainerData();
+    }
+  }, [user]);
+
+  // Delete an availability slot
   const deleteAvailability = async (scheduleId) => {
+    if (!user) return;
+
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${baseUrl}/user/schedules${scheduleId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const token = user.token;
+      await axios.delete(`${baseUrl}/user/availability/${scheduleId}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
-      // Refresh availabilities
-      const res = await axios.get(`${baseUrl}/user/schedules`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAvailabilities(res.data);
+      fetchTrainerData(); // Refresh data after deletion
+      setError('');
     } catch (err) {
       setError('Failed to delete availability');
       console.error(err);
     }
   };
 
-  const updateBookingStatus = async (bookingId, status) => {
+  // Delete a booking
+  const deleteBooking = async (bookingId) => {
+    if (!user) return;
+
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${baseUrl}/user/bookings/${bookingId}`, 
-        { status },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      // Refresh bookings
-      const res = await axios.get(`${baseUrl}/user/bookings`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const token = user.token;
+      await axios.delete(`${baseUrl}/user/bookings/${bookingId}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      setBookings(res.data);
+      fetchTrainerData(); // Refresh data after deletion
+      setError('');
     } catch (err) {
-      setError(`Failed to ${status} booking`);
+      setError('Failed to delete booking');
       console.error(err);
     }
   };
 
-  if (loading) return <div className="text-center p-4">Loading...</div>;
+  // Redirect to login if user is not authenticated
+  if (!user) {
+    return (
+      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Typography variant="body1">Please log in to access the Trainer Dashboard.</Typography>
+      </Container>
+    );
+  }
+
+  // Show loading spinner while data is being fetched
+  if (loading) {
+    return (
+      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Trainer Dashboard</h1>
-      
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Trainer Dashboard
+      </Typography>
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <Alert severity="error" sx={{ mb: 2 }}>
           {error}
-        </div>
+        </Alert>
       )}
-      
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-            <h2 className="text-xl font-semibold mb-4">Add New Availability</h2>
-            
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="lesson_name">
-                  Lesson Name
-                </label>
-                <input
-                  type="text"
-                  id="lesson_name"
-                  name="lesson_name"
-                  value={formData.lesson_name}
-                  onChange={handleChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                />
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="available_date">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  id="available_date"
-                  name="available_date"
-                  value={formData.available_date}
-                  onChange={handleChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                />
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="available_time">
-                  Time
-                </label>
-                <input
-                  type="time"
-                  id="available_time"
-                  name="available_time"
-                  value={formData.available_time}
-                  onChange={handleChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                />
-              </div>
-              
-              <button
-                type="submit"
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              >
-                Add Availability
-              </button>
-            </form>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">My Available Slots</h2>
-            
-            {availabilities.length === 0 ? (
-              <p className="text-gray-500">You haven't added any available slots yet.</p>
-            ) : (
-              <div className="space-y-4">
-                {availabilities.map((slot) => (
-                  <div 
-                    key={slot.schedule_id} 
-                    className="border p-4 rounded flex justify-between items-center"
-                  >
-                    <div>
-                      <h3 className="font-medium">{slot.lesson_name}</h3>
-                      <p className="text-sm text-gray-600">
-                        Date: {new Date(slot.available_date).toLocaleDateString()}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Time: {slot.available_time}
-                      </p>
-                      {slot.is_booked && (
-                        <span className="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 text-xs rounded mt-1">
-                          Booked
-                        </span>
-                      )}
-                    </div>
-                    
-                    {!slot.is_booked && (
-                      <button
-                        onClick={() => deleteAvailability(slot.schedule_id)}
-                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Client Bookings</h2>
-          
-          {bookings.length === 0 ? (
-            <p className="text-gray-500">No bookings yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {bookings.map((booking) => (
-                <div 
-                  key={booking.booking_id} 
-                  className="border p-4 rounded"
-                >
-                  <h3 className="font-medium">{booking.lesson_name}</h3>
-                  <p className="text-sm text-gray-600">
-                    Client: {booking.client_name}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Date: {new Date(booking.available_date).toLocaleDateString()}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Time: {booking.available_time}
-                  </p>
-                  
-                  <div className="mt-2 flex items-center">
-                    <span 
-                      className={`inline-block px-2 py-1 text-xs rounded mr-2 ${
-                        booking.status === 'confirmed' 
-                          ? 'bg-green-100 text-green-800' 
-                          : booking.status === 'canceled'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
+
+      <Grid container spacing={3}>
+        {/* My Available Slots */}
+        <Grid item xs={12} md={6}>
+          <Paper elevation={3} sx={{ padding: 3 }}>
+            <Typography variant="h6" component="h2" gutterBottom>
+              My Available Slots
+            </Typography>
+            {Array.isArray(availabilities) && availabilities.length > 0 ? (
+              availabilities.map((slot) => (
+                <Card key={slot.schedule_id} variant="outlined" sx={{ mb: 2 }}>
+                  <CardContent>
+                    <Typography variant="subtitle1">{slot.lesson_name}</Typography>
+                    <Typography variant="body2">Date: {slot.available_date}</Typography>
+                    <Typography variant="body2">Time: {slot.available_time}</Typography>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      size="small"
+                      onClick={() => deleteAvailability(slot.schedule_id)}
+                      sx={{ mt: 1 }}
                     >
-                      {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                    </span>
-                    
-                    {booking.status === 'pending' && (
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => updateBookingStatus(booking.booking_id, 'confirmed')}
-                          className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm"
-                        >
-                          Confirm
-                        </button>
-                        <button
-                          onClick={() => updateBookingStatus(booking.booking_id, 'canceled')}
-                          className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+                      Delete Availability
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Typography variant="body2">No available slots found.</Typography>
+            )}
+          </Paper>
+        </Grid>
+
+        {/* Client Bookings */}
+        <Grid item xs={12} md={6}>
+          <Paper elevation={3} sx={{ padding: 3 }}>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Client Bookings
+            </Typography>
+            {Array.isArray(bookings) && bookings.length > 0 ? (
+              bookings.map((booking) => (
+                <Card key={booking.booking_id} variant="outlined" sx={{ mb: 2 }}>
+                  <CardContent>
+                    <Typography variant="subtitle1">{booking.lesson_name}</Typography>
+                    <Typography variant="body2">Client: {booking.client_name}</Typography>
+                    <Typography variant="body2">Date: {booking.available_date}</Typography>
+                    <Typography variant="body2">Time: {booking.available_time}</Typography>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      size="small"
+                      onClick={() => deleteBooking(booking.booking_id)}
+                      sx={{ mt: 1 }}
+                    >
+                      Cancel Booking
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Typography variant="body2">No bookings found.</Typography>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+    </Container>
   );
 };
 

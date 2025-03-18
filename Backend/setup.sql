@@ -9,7 +9,15 @@ CREATE TABLE users (
   DROP TABLE if exists users cascade;
 
 UPDATE users SET role = 'admin' WHERE user_id = 1;
-UPDATE users SET role = 'trainer' WHERE user_id = <user_id>;
+UPDATE users SET role = 'trainer' WHERE user_id = 2;
+
+ALTER TABLE bookings
+ADD COLUMN lesson_name VARCHAR(100),
+ADD COLUMN available_date DATE,
+ADD COLUMN available_time TIME;
+
+ALTER TABLE bookings
+DROP COLUMN status;
 
 CREATE TABLE schedules (
   schedule_id SERIAL PRIMARY KEY,
@@ -32,23 +40,21 @@ CREATE TABLE workouts (
   workout_name VARCHAR(255) NOT NULL,
   calories_burnt INT,
   description TEXT,
-  user_id INT REFERENCES users(user_id) ON DELETE CASCADE  
+  user_id INT REFERENCES users(user_id) ON DELETE CASCADE  -- trainer ID
 );
+  
+  
+  
+  
+  
+  
+  
 
-INSERT INTO schedules (trainer_id, lesson_name, available_date, available_time)
-VALUES 
-(1, 'HIIT Training', '2025-04-01', '09:00:00'),
-(1, 'Yoga Class', '2025-04-02', '14:00:00'),
-(1, 'Weight Training', '2025-04-03', '17:00:00');
 
-INSERT INTO bookings (client_id, schedule_id, status)
-VALUES 
-(2, 1, 'confirmed'),
-(3, 2, 'pending'),
-(2, 3, 'confirmed');
 
-INSERT INTO workouts (workout_name, calories_burnt, description, user_id)
-VALUES 
-('Morning Run', 450, 'A 5km run at moderate pace', 2),
-('Core Workout', 300, '30 minutes of core-focused exercises', 3),
-('Full Body Circuit', 550, '45 minutes circuit training with weights', 2);
+
+
+
+
+
+

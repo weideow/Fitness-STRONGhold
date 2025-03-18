@@ -21,7 +21,7 @@ const userRoutes = require('./routes/userRoutes');
 const workoutRoutes = require('./routes/workoutRoutes');
 const registerRoutes = require('./routes/registerRoutes');
 
-app.use('/register', registerRoutes)
+app.use('/register', registerRoutes);
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/workouts', workoutRoutes);

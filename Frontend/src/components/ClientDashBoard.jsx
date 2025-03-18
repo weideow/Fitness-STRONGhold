@@ -1,12 +1,15 @@
 import React from 'react';
 import ClientBooking from './Client';
+import { Container, Typography } from '@mui/material';
 
 const ClientDashboard = () => {
   return (
-    <div>
-      <h2>Client Dashboard</h2>
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        
+      </Typography>
       <ClientBooking />
-    </div>
+    </Container>
   );
 };
 

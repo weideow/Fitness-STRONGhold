@@ -1,28 +1,63 @@
 import React, { useContext } from 'react';
 import { Link } from 'react-router'; 
-import { useNavigate } from 'react-router';
-import AuthContext from '../contexts/authContexts';
+import { AuthContext } from '../contexts/authContexts';
+import Logout from './Logout';
+import { AppBar, Toolbar, Button, Box, Typography } from '@mui/material';
 
 const Navbar = () => {
-  const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login'); 
-  };
+  const { user } = useContext(AuthContext);
 
   return (
-    <nav className="bg-blue-500 p-4">
-      <ul className="flex space-x-4">
-        <li><Link to="/login" className="text-white hover:underline">Login</Link></li>
-        <li><Link to="/dashboard/client" className="text-white hover:underline">Client Dashboard</Link></li>
-        <li><Link to="/dashboard/trainer" className="text-white hover:underline">Trainer Dashboard</Link></li>
-        <li><Link to="/register" className="text-white hover:underline">Register</Link></li>
-        <li><Link to="/workouts" className="text-white hover:underline">Workouts</Link></li>
-        <li><button onClick={logout} className="text-white hover:text-blue-200">Logout</button></li>
-      </ul>
-    </nav>
+    <AppBar position="static">
+      <Toolbar>
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+        
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button color="inherit" component={Link} to="/home">
+            Home
+          </Button>
+
+          {!user && (
+            <>
+              <Button color="inherit" component={Link} to="/login">
+                Login
+              </Button>
+              <Button color="inherit" component={Link} to="/register">
+                Register
+              </Button>
+            </>
+          )}
+
+          {user && (user.role === 'admin' || user.role === 'trainer') && (
+            <>
+              <Button color="inherit" component={Link} to="/dashboard/client">
+                Client Dashboard
+              </Button>
+              <Button color="inherit" component={Link} to="/dashboard/trainer">
+                Trainer Dashboard
+              </Button>
+              <Button color="inherit" component={Link} to="/workouts">
+                Workouts
+              </Button>
+            </>
+          )}
+
+          {user && user.role === 'client' && (
+            <>
+              <Button color="inherit" component={Link} to="/dashboard/client">
+                Client Dashboard
+              </Button>
+              <Button color="inherit" component={Link} to="/workouts">
+                Workouts
+              </Button>
+            </>
+          )}
+
+          {user && <Logout />}
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 };
 
