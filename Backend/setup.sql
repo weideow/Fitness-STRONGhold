@@ -25,8 +25,8 @@ CREATE TABLE schedules (
   lesson_name VARCHAR (100),
   available_date DATE,
   available_time TIME
-  );
-
+  );                                            
+                          
 CREATE TABLE bookings (
   booking_id SERIAL PRIMARY KEY,
   client_id INT REFERENCES users(user_id) ON DELETE CASCADE,

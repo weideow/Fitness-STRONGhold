@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+                                                                                                  import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router';
 
@@ -9,9 +9,9 @@ const Register = () => {
   const navigate = useNavigate();
   const baseUrl = import.meta.env.VITE_BACKEND_URL;
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e) => {                                               
     e.preventDefault();
-
+                                                                                        
     try {
       await axios.post(`${baseUrl}/auth/register`, { email, password });
       navigate('/login');
@@ -40,4 +40,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default Register;                                                                                                                        
